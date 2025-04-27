@@ -1,4 +1,4 @@
-from db.database import database
+from db.database import client_database
 
 
 async def get_database_schema() -> str:
@@ -8,7 +8,7 @@ async def get_database_schema() -> str:
     WHERE table_schema = 'public'
     ORDER BY table_name, ordinal_position;
     """
-    rows = await database.fetch_all(query=query)
+    rows = await client_database.fetch_all(query=query)
 
     schema = {}
     for row in rows:

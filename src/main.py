@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from db.database import database
+from db.database import system_database, client_database
 from routes import query_routes
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -12,11 +12,14 @@ limiter = Limiter(key_func=get_remote_address)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup logic
-    await database.connect()
-    print("db connected")
+    await system_database.connect()
+    print("system db connected")
+    await client_database.connect()
+    print("client db connected")
     yield
     # shutdown logic
-    await database.disconnect()
+    await system_database.disconnect()
+    await client_database.disconnect()
 
 
 app = FastAPI(lifespan=lifespan)

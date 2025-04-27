@@ -1,5 +1,5 @@
 from llm.query_llm import generate_sql_from_question
-from db.database import database
+from db.database import client_database
 from utils.logger import logger
 from fastapi import HTTPException
 from db.schema_fetcher import get_database_schema
@@ -21,7 +21,7 @@ async def handle_query(question: str) -> list:
         )
 
     try:
-        rows = await database.fetch_all(query=sql_query)
+        rows = await client_database.fetch_all(query=sql_query)
     except Exception as e:
         logger.exception(f"Database query failed for SQL: {sql_query}")
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
