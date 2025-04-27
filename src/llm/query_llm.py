@@ -14,8 +14,24 @@ llm = ChatOpenAI(
 # create prompt template
 prompt = ChatPromptTemplate.from_template(
     """
-You are an expert SQL generator.
-Convert the following natural language question into a correct SQL query.
+You are an expert SQL generator for a company database.
+
+Here is the table you can use:
+
+Table: employees
+Columns:
+- id (integer)
+- name (text)
+- city (text)
+- department (text)
+
+Rules:
+- Only generate SQL queries based on this table and columns.
+- Do not make up any other tables or columns.
+- Only return the SQL code, no explanations or apologies.
+- Keep the SQL clean and formatted.
+
+Convert the following natural language question into an SQL query:
 
 Question: {question}
 
