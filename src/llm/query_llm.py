@@ -26,10 +26,13 @@ Columns:
 - department (text)
 
 Rules:
-- Only generate SQL queries based on this table and columns.
+Rules:
+- Only generate SQL queries based on the given table and columns.
 - Do not make up any other tables or columns.
-- Only return the SQL code, no explanations or apologies.
-- Keep the SQL clean and formatted.
+- Only return SQL code, without markdown, no code blocks.
+- Keep SQL clean and in a single line.
+- Do not add explanations or comments.
+
 
 Convert the following natural language question into an SQL query:
 
