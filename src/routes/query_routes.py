@@ -11,5 +11,5 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 async def process_query(request: QueryRequest):
-    sql_result = handle_query(request.question)
+    sql_result = await handle_query(request.question)
     return {"generated_sql": sql_result}
