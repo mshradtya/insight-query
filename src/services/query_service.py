@@ -2,6 +2,8 @@ from llm.query_llm import generate_sql_from_question
 from db.database import database
 from utils.logger import logger
 from fastapi import HTTPException
+from db.schema_fetcher import get_database_schema
+import re
 
 
 async def handle_query(question: str) -> list:
@@ -11,7 +13,7 @@ async def handle_query(question: str) -> list:
     logger.info(f"Generated SQL: {sql_query}")
 
     # Validation
-    if not is_valid_sql(sql_query):
+    if not await is_valid_sql(sql_query):
         logger.error(f"Invalid SQL generated: {sql_query}")
         raise HTTPException(
             status_code=400,
@@ -27,6 +29,21 @@ async def handle_query(question: str) -> list:
     return [dict(row) for row in rows]
 
 
-def is_valid_sql(sql_query: str) -> bool:
+async def is_valid_sql(sql_query: str) -> bool:
     sql_query = sql_query.strip().lower()
-    return sql_query.startswith("select") and "from employees" in sql_query
+
+    # Must start with select
+    if not sql_query.startswith("select"):
+        return False
+
+    schema_info = await get_database_schema()
+    valid_tables = [
+        line.split("(")[0].strip().lower() for line in schema_info.splitlines()
+    ]
+
+    # Check if at least one valid table name exists anywhere in the SQL
+    for table in valid_tables:
+        if re.search(rf"\b{table}\b", sql_query):
+            return True
+
+    return False

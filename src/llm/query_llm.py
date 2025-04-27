@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from db.schema_fetcher import get_database_schema
 
 # load env
 load_dotenv()
@@ -11,40 +12,28 @@ llm = ChatOpenAI(
     temperature=0.2,
 )
 
-# create prompt template
-prompt = ChatPromptTemplate.from_template(
-    """
-You are an expert SQL generator for a company database.
 
-Here is the table you can use:
-
-Table: employees
-Columns:
-- id (integer)
-- name (text)
-- city (text)
-- department (text)
-
-Rules:
-Rules:
-- Only generate SQL queries based on the given table and columns.
-- Do not make up any other tables or columns.
-- Only return SQL code, without markdown, no code blocks.
-- Keep SQL clean and in a single line.
-- Do not add explanations or comments.
-
-
-Convert the following natural language question into an SQL query:
-
-Question: {question}
-
-SQL Query:
-"""
-)
-
-
-# function to generate SQL
 async def generate_sql_from_question(question: str) -> str:
+    schema_info = await get_database_schema()
+    print(schema_info)
+
+    prompt = ChatPromptTemplate.from_template(
+        f"""
+You are an expert SQL generator.
+
+Available tables and columns:
+{schema_info}
+
+Rules:
+- Only use available tables and columns.
+- Do not hallucinate nonexistent tables or columns.
+- Only return pure SQL, in a single line, without markdown code blocks.
+- No explanation, only SQL.
+
+Question: {{question}}
+"""
+    )
+
     chain = prompt | llm
     response = await chain.ainvoke({"question": question})
     return response.content.strip()
