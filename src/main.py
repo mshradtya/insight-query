@@ -13,13 +13,12 @@ limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup logic
     await system_database.connect()
     print("system db connected")
     await client_database.connect()
     print("client db connected")
 
-    # ⚡ Manually create users table
+    # ⚡ Manually create users table FIRST
     create_users_table_sql = """
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -28,10 +27,24 @@ async def lifespan(app: FastAPI):
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """
-    await system_database.execute(create_users_table_sql)
+
+    # ⚡ THEN create queries table (depends on users)
+    create_queries_table_sql = """
+    CREATE TABLE IF NOT EXISTS queries (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        question TEXT NOT NULL,
+        generated_sql TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+
+    # Correct creation order:
+    await system_database.execute(create_users_table_sql)  # 🔥 users first
+    await system_database.execute(create_queries_table_sql)  # 🔥 queries second
 
     yield
-    # shutdown logic
+
     await system_database.disconnect()
     await client_database.disconnect()
 
